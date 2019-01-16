@@ -3,26 +3,23 @@
 #include <string.h>
 
 
-/****
-  Hash table key/value pair with linked list pointer
- ****/
+
+//  Hash table key/value pair with linked list pointer
 typedef struct LinkedPair {
   char *key;
   char *value;
   struct LinkedPair *next;
 } LinkedPair;
 
-/****
-  Hash table with linked pairs
- ****/
+//  Hash table with linked pairs
 typedef struct HashTable {
   int capacity;
   LinkedPair **storage;
 } HashTable;
 
-/****
-  Create a key/value linked pair to be stored in the hash table.
- ****/
+
+//  Create a key/value linked pair to be stored in the hash table.
+
 LinkedPair *create_pair(char *key, char *value)
 {
   LinkedPair *pair = malloc(sizeof(LinkedPair));
@@ -33,9 +30,8 @@ LinkedPair *create_pair(char *key, char *value)
   return pair;
 }
 
-/****
-  Use this function to safely destroy a hashtable pair.
- ****/
+
+//  This function safely destroys a hashtable pair.
 void destroy_pair(LinkedPair *pair)
 {
   if (pair != NULL) {
@@ -45,11 +41,8 @@ void destroy_pair(LinkedPair *pair)
   }
 }
 
-/****
-  djb2 hash function
 
-  Do not modify this!
- ****/
+//  djb2 hash function
 unsigned int hash(char *str, int max)
 {
   unsigned long hash = 5381;
@@ -63,14 +56,12 @@ unsigned int hash(char *str, int max)
   return hash % max;
 }
 
-/****
-  Fill this in.
 
-  All values in storage should be initialized to NULL
- ****/
 HashTable *create_hash_table(int capacity)
 {
-  HashTable *ht;
+  HashTable *ht = malloc(sizeof(HashTable));
+  ht->capacity = capacity;
+  ht->storage = calloc(capacity, sizeof(LinkedPair*));
 
   return ht;
 }
@@ -86,47 +77,94 @@ HashTable *create_hash_table(int capacity)
  ****/
 void hash_table_insert(HashTable *ht, char *key, char *value)
 {
+  int index = hash(key, ht->capacity);
 
+  if (ht->storage[index] != NULL)
+  {
+    ht->storage[index]->next = create_pair(key, value);
+  } else {
+    ht->storage[index] = create_pair(key, value);
+  }
 }
 
-/****
-  Fill this in.
 
-  Should search the entire list of LinkedPairs for existing
-  keys and remove matching LinkedPairs safely.
-
-  Don't forget to free any malloc'ed memory!
- ****/
 void hash_table_remove(HashTable *ht, char *key)
 {
+  unsigned int index = hash(key, ht->capacity);
+  // LinkedPair *search_pair = malloc(sizeof(LinkedPair *));
+  LinkedPair *current_pair = ht->storage[index];
+  LinkedPair *previous_pair = malloc(sizeof(LinkedPair *));
 
+  if (current_pair->key == key)
+  {
+    ht->storage[index] = current_pair->next;
+    destroy_pair(current_pair);
+    return;
+  }
+
+
+  if (current_pair->next == NULL)
+  {
+    fprintf(stderr, "ValueError: value %s not in hash table", key);
+  }
+  
+  if (current_pair->next != NULL)
+  {
+    while (strcmp(current_pair->next->key, key) != 0)
+    {
+      previous_pair = current_pair;
+      current_pair = current_pair->next;
+    }
+    previous_pair->next = current_pair->next;
+    destroy_pair(current_pair);
+  }
 }
 
-/****
-  Fill this in.
 
-  Should search the entire list of LinkedPairs for existing
-  keys.
-
-  Return NULL if the key is not found.
- ****/
 char *hash_table_retrieve(HashTable *ht, char *key)
 {
+  unsigned int index = hash(key, ht->capacity);
+  LinkedPair *current_pair = ht->storage[index];
+
+  if (strcmp(current_pair->key, key) == 0)
+  {
+    return current_pair->value;
+  } else {
+    while (current_pair->next)
+    {
+      current_pair = current_pair->next;
+      if (strcmp(current_pair->key, key) == 0)
+      {
+        return current_pair->value;
+      }
+    }
+  }
+
   return NULL;
 }
 
-/****
-  Fill this in.
 
-  Don't forget to free any malloc'ed memory!
- ****/
 void destroy_hash_table(HashTable *ht)
 {
-
+  for (int i = 0; i < ht->capacity; i++)
+  {
+    if (ht->storage[i] != NULL)
+    {
+      LinkedPair *deleting_pair = ht->storage[i];
+      while (deleting_pair->next)
+      {
+        LinkedPair *temp = deleting_pair->next;
+        free(deleting_pair);
+        deleting_pair = temp;
+      }
+    }
+    free(ht->storage[i]);
+  }
+  free(ht->storage);
 }
 
 /****
-  Fill this in.
+  Need to Fill this in.
 
   Should create a new hash table with double the capacity
   of the original and copy all elements into the new hash table.
