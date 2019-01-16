@@ -19,9 +19,9 @@ typedef struct BasicHashTable {
   Pair **storage;
 } BasicHashTable;
 
-/****
-  Create a key/value pair to be stored in the hash table.
- ****/
+
+//  Creates a key/value pair to be stored in the hash table.
+
 Pair *create_pair(char *key, char *value)
 {
   Pair *pair = malloc(sizeof(Pair));
@@ -31,9 +31,9 @@ Pair *create_pair(char *key, char *value)
   return pair;
 }
 
-/****
-  Use this function to safely destroy a hashtable pair.
- ****/
+
+//  Use this function to safely destroy a hashtable pair.
+
 void destroy_pair(Pair *pair)
 {
   if (pair != NULL) {
@@ -43,11 +43,9 @@ void destroy_pair(Pair *pair)
   }
 }
 
-/****
-  djb2 hash function
 
-  Do not modify this!
- ****/
+//  djb2 hash function
+
 unsigned int hash(char *str, int max)
 {
   unsigned long hash = 5381;
@@ -62,59 +60,65 @@ unsigned int hash(char *str, int max)
 }
 
 
-/****
-  Fill this in.
-
-  All values in storage should be initialized to NULL
-  (hint: look up `calloc`)
- ****/
 BasicHashTable *create_hash_table(int capacity)
 {
-  BasicHashTable *ht;
+  BasicHashTable *ht = malloc(sizeof(BasicHashTable));
+  ht->capacity = capacity;
+  ht->storage = calloc(capacity, sizeof(Pair *));
 
   return ht;
 }
 
-/****
-  Fill this in.
 
-  If you are overwriting a value with a different key, print a warning.
-
-  Don't forget to free any malloc'ed memory!
- ****/
 void hash_table_insert(BasicHashTable *ht, char *key, char *value)
 {
+  Pair *new_pair = create_pair(key, value);
+  Pair *stored_pair = ht->storage[hash(key, ht->capacity)];
 
+  if (stored_pair != NULL)
+  {
+    if (strcmp(stored_pair->key, key) != 0)
+    {
+      printf("Warning Overwriting '%s'/'%s' with '%s'/'%s'\n", stored_pair->key, stored_pair->value, new_pair->key, new_pair->value);
+    }
+    
+  }
+
+  destroy_pair(stored_pair);
+  ht->storage[hash(new_pair->key, ht->capacity)] = new_pair;
 }
 
-/****
-  Fill this in.
 
-  Don't forget to free any malloc'ed memory!
- ****/
 void hash_table_remove(BasicHashTable *ht, char *key)
 {
-
+  unsigned int index = hash(key, ht->capacity);
+  destroy_pair(ht->storage[index]);
+  ht->storage[index] = NULL;
 }
 
-/****
-  Fill this in.
 
-  Should return NULL if the key is not found.
- ****/
 char *hash_table_retrieve(BasicHashTable *ht, char *key)
 {
+  if (ht->storage[hash(key,ht->capacity)] != NULL)
+  {
+    return ht->storage[hash(key, ht->capacity)]->value;
+  }
+
   return NULL;
 }
 
-/****
-  Fill this in.
-
-  Don't forget to free any malloc'ed memory!
- ****/
 void destroy_hash_table(BasicHashTable *ht)
 {
+  for (int i = 0; i < ht->capacity; i++)
+  {
+    if (ht->storage[i] != NULL)
+    {
+      destroy_pair(ht->storage[i]);
+    }
+  }
 
+  free(ht->storage);
+  free(ht);
 }
 
 
@@ -139,4 +143,4 @@ int main(void)
 
   return 0;
 }
-#endif
+#endif 
