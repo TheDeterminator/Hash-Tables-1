@@ -141,6 +141,6 @@ int main(void)
 
   destroy_hash_table(ht);
 
-  return 0;
+  return 0; 
 }
 #endif 
